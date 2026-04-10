@@ -1,8 +1,11 @@
 # New-API 完整部署指南：在线 & 离线环境一文搞定（MySQL + Docker）
 
 > **本仓库**：[https://github.com/KaminDeng/new-api-helper](https://github.com/KaminDeng/new-api-helper)
+> 
 > **New-API 上游仓库**：[https://github.com/Calcium-Ion/new-api](https://github.com/Calcium-Ion/new-api)
+> 
 > **官方文档**：[https://docs.newapi.pro/](https://docs.newapi.pro/)
+> 
 > **Docker Hub**：[https://hub.docker.com/r/calciumion/new-api](https://hub.docker.com/r/calciumion/new-api)
 
 ---
@@ -303,6 +306,9 @@ docker rm -f new-api
 ---
 
 > **本仓库**：[https://github.com/KaminDeng/new-api-helper](https://github.com/KaminDeng/new-api-helper)
+> 
 > **New-API 上游仓库**：[https://github.com/Calcium-Ion/new-api](https://github.com/Calcium-Ion/new-api)
+> 
 > **官方文档**：[https://docs.newapi.pro/](https://docs.newapi.pro/)
+> 
 > **Docker Hub**：[https://hub.docker.com/r/calciumion/new-api](https://hub.docker.com/r/calciumion/new-api)
