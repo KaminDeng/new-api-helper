@@ -163,11 +163,11 @@ docker logs -f new-api
 
 ## 六、离线部署（内网 / 气隙环境）
 
-适用于生产服务器无法访问外网的场景，需要在联网机器上提前准备好镜像文件。
+适用于生产服务器无法访问外网的场景。现在脚本还支持**完全离线**的机器：即目标服务器既没有外网，也还没安装 Docker，也可以直接安装并部署。
 
 ### 6.1 在联网机器上：导出镜像
 
-本仓库提供了镜像导出脚本：
+本仓库提供了镜像导出脚本；同时仓库内也可以直接放置离线安装资源（如 `images/docker-27.5.1.tgz`、`images/mysql-8.0.tar`、`images/new-api-nightly-*.tar.gz`），用于完全无网环境。
 
 ```bash
 git clone https://github.com/KaminDeng/new-api-helper.git
@@ -184,27 +184,34 @@ bash scripts/export-images.sh
 将以下文件通过 U 盘、SCP 或其他安全方式传输到目标内网机器：
 
 ```
-mysql-8.0.tar                    # MySQL 镜像
-new-api-amd64.tar                # New-API 镜像（AMD64）
-new-api-arm64.tar                # New-API 镜像（ARM64，按需）
+images/docker-27.5.1.tgz         # Docker 离线安装包
+images/mysql-8.0.tar             # MySQL 镜像
+images/new-api-amd64.tar         # New-API 镜像（AMD64，可选）
+images/new-api-arm64.tar         # New-API 镜像（ARM64，可选）
+images/new-api-nightly-amd64.tar.gz
+images/new-api-nightly-arm64.tar.gz
 scripts/deploy-offline.sh        # 离线部署脚本
 ```
 
 ### 6.3 在内网机器上：一键部署
 
-将 `deploy-offline.sh` 和 tar 文件放在同一目录，执行：
+推荐保持仓库目录结构不变，直接执行：
 
 ```bash
-bash deploy-offline.sh
+sudo bash scripts/deploy-offline.sh
 ```
+
+如果你只拷贝了脚本和镜像文件，也可以保证 `images/` 目录与脚本路径关系不变后执行。
 
 脚本会自动完成以下工作：
 
-1. 加载 MySQL 镜像（从 `mysql-8.0.tar`）
-2. 检测系统架构，加载对应的 New-API 镜像（兼容 `new-api-nightly-*.tar.gz` 命名格式）
-3. 启动 MySQL 容器并等待就绪
-4. 启动 New-API 容器
-5. 输出访问地址
+1. 检查系统是否已安装 Docker
+2. 如果没有安装，则从 `images/docker-27.5.1.tgz` 离线安装 Docker
+3. 加载 MySQL 镜像（从 `images/mysql-8.0.tar` 或当前目录）
+4. 检测系统架构，加载对应的 New-API 镜像（兼容 `images/new-api-nightly-*.tar.gz` 命名格式）
+5. 启动 MySQL 容器并等待就绪
+6. 启动 New-API 容器
+7. 输出访问地址
 
 > 同样，数据库密码等参数在脚本顶部的配置区域修改。
 
@@ -285,7 +292,8 @@ docker rm -f new-api
 | New-API 启动后立即退出 | `docker logs new-api` 查看日志，通常是 MySQL 连接失败，检查 SQL_DSN 配置 |
 | 无法连接 MySQL | 确认 MySQL 容器已启动且就绪；检查 `--add-host` 参数是否正确 |
 | ARM64 机器镜像不匹配 | 确保使用 `latest-arm64` 标签的镜像 |
-| 离线加载 tar 失败 | 确认 tar 文件完整（未被截断），可用 `file xxx.tar` 检查文件类型 |
+| 离线加载 tar 失败 | 确认 tar 文件完整（未被截断），可用 `file xxx.tar` 或 `file xxx.tgz` 检查文件类型 |
+| 纯离线机器没有 Docker | 使用 `sudo bash scripts/deploy-offline.sh`，脚本会从 `images/docker-27.5.1.tgz` 自动安装 Docker |
 | 端口 3000 被占用 | 修改脚本中的 `NEW_API_PORT` 变量，或在 docker run 中改为 `-p 其他端口:3000` |
 | 数据库迁移（SQLite → MySQL） | 参考官方文档：[docs.newapi.pro](https://docs.newapi.pro/) |
 
