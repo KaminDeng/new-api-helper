@@ -20,7 +20,6 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "$0")" && pwd)
 REPO_ROOT=$(cd -- "$SCRIPT_DIR/.." && pwd)
 IMAGES_DIR="$REPO_ROOT/images"
 DOCKER_TGZ="$IMAGES_DIR/docker-27.5.1.tgz"
-MYSQL_TAR="$IMAGES_DIR/mysql-8.0.tar"
 # --------------------------------
 
 require_root() {
@@ -30,9 +29,27 @@ require_root() {
     fi
 }
 
+find_mysql_tar() {
+    if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+        for f in \
+            "$IMAGES_DIR/mysql-8.0-arm64.tar" \
+            "$PWD/mysql-8.0-arm64.tar"; do
+            if [ -f "$f" ]; then MYSQL_TAR="$f"; break; fi
+        done
+    else
+        for f in \
+            "$IMAGES_DIR/mysql-8.0-amd64.tar" \
+            "$IMAGES_DIR/mysql-8.0.tar" \
+            "$PWD/mysql-8.0-amd64.tar" \
+            "$PWD/mysql-8.0.tar"; do
+            if [ -f "$f" ]; then MYSQL_TAR="$f"; break; fi
+        done
+    fi
+}
+
 find_new_api_tar() {
     if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-        NEW_API_IMAGE="calciumion/new-api:latest-arm64"
+        NEW_API_IMAGE="calciumion/new-api:nightly-arm64"
         echo "检测到 ARM64 架构"
         for f in \
             "$IMAGES_DIR/new-api-arm64.tar" \
@@ -42,7 +59,7 @@ find_new_api_tar() {
             if [ -f "$f" ]; then TAR_FILE="$f"; break; fi
         done
     else
-        NEW_API_IMAGE="calciumion/new-api:latest"
+        NEW_API_IMAGE="calciumion/new-api:nightly-amd64"
         echo "检测到 AMD64 架构"
         for f in \
             "$IMAGES_DIR/new-api-amd64.tar" \
@@ -132,14 +149,12 @@ install_docker_offline
 
 echo ""
 echo "=== [2/6] 加载 MySQL 镜像 ==="
-if [ -f "$MYSQL_TAR" ]; then
-    docker load -i "$MYSQL_TAR"
-elif [ -f "$PWD/mysql-8.0.tar" ]; then
-    docker load -i "$PWD/mysql-8.0.tar"
-else
-    echo "错误：找不到 mysql-8.0.tar，请确认存在于 images/ 或当前目录"
+find_mysql_tar
+if [ -z "${MYSQL_TAR:-}" ]; then
+    echo "错误：找不到 MySQL 镜像 tar 文件，请确认存在于 images/ 或当前目录"
     exit 1
 fi
+docker load -i "$MYSQL_TAR"
 echo "MySQL 镜像加载完成"
 
 echo ""
